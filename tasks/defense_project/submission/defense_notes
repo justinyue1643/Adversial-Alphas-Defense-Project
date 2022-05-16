@@ -1,0 +1,9 @@
+Attack Param    Accuracy    Defense Score    Training Start Accuracy   Raw Acc
+0.8             0.65        31               0.04
+0.3             0.70        37               0.025
+0.5             {'raw_acc': 69.79166666666667, 'score': 54.17173392297771, 'target_FGSM_targeted_sr': 0.0, 'target_PGD_targeted_sr': 34.32835820895522}
+0.45 - 0.55     {'raw_acc': 69.79166666666667, 'score': 55.29113690805234, 'target_FGSM_targeted_sr': 0.0, 'target_PGD_targeted_sr': 26.865671641791046}
+0.4 - 0.6       {'raw_acc': 61.458333333333336, 'score': 43.161749319941414, 'target_FGSM_targeted_sr': 5.084745762711864, 'target_PGD_targeted_sr': 20.338983050847457}
+
+Attack Param    Training Accuracy   results.json
+0.425 - 0.575   0.70                {'raw_acc': 70.83333333333333, 'score': 57.77596223674654, 'target_FGSM_targeted_sr': 0.0, 'target_PGD_targeted_sr': 20.58823529411765}
