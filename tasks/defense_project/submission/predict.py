@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 import torch.nn as nn
 import torch.optim as optim
+import torchvision.transforms as transforms
 
 class LeNet(nn.Module):
     def __init__(self):
@@ -55,7 +56,13 @@ class Prediction():
         return model
 
     def preprocess(self, original_images):
-        perturbed_image = original_images.unsqueeze(0)
+        preprocess = transforms.Compose([
+            transforms.GaussianBlur(3),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        transformed_img = preprocess(original_images)
+        perturbed_image = transformed_img.unsqueeze(0)
         return perturbed_image
 
     def get_batch_output(self, images):

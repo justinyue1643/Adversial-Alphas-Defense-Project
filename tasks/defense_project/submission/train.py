@@ -76,18 +76,14 @@ class Adv_Training():
         self.model.train()
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=10)
         dataset_size = len(trainset)
+        print(dataset_size)
         custom_dataset = CustomDataset(dataset_size)
-        more_loader = torch.utils.data.DataLoader(custom_dataset, batch_size=100, shuffle=True, num_workers=10)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(self.model.parameters())
         for epoch in range(epoches):  # loop over the dataset multiple times
             running_loss = 0.0
-            # holder = [1,2,3,4,5]
-            # t = [6, 7, 8]
-            # (holder, *t)
-            # print indices to figure out how long trainloader is
-            # then conditional breakpoint to see how we can add back to the dataset
 
+            # regular training
             for i, (inputs, labels) in enumerate(trainloader, 0):
                 # get the inputs; data is a list of [inputs, labels]
                 inputs = inputs.to(device)
@@ -100,10 +96,41 @@ class Adv_Training():
                 nontarget_fgsm_adv_inputs, _ = self.nontarget_fgsm_perturb.attack(inputs, cpu_labels)
                 nontarget_fgsm_adv_inputs = torch.tensor(nontarget_fgsm_adv_inputs).to(device)
 
-                # target_fgsm_adv_inputs, _ = self.target_fgsm_perturb.attack(
-                #     inputs, labels.detach().cpu().tolist(), target_label
-                # )
-                # target_fgsm_adv_inputs = torch.tensor(target_fgsm_adv_inputs).to(device)
+                # tried setting target label to -1, broke cuda
+                pgd_adv_inputs, _ = self.pgd_perturb.attack(inputs, cpu_labels, target_label)
+                pgd_adv_inputs = torch.tensor(pgd_adv_inputs).to(device)
+
+                # zero the parameter gradients
+                optimizer.zero_grad()
+                outputs = self.model(inputs)
+                nontarget_fgsm_adv_outputs = self.model(nontarget_fgsm_adv_inputs)
+                pgd_adv_outputs = self.model(pgd_adv_inputs)
+
+                loss = criterion(outputs, labels) + criterion(nontarget_fgsm_adv_outputs, labels) * 0.425 \
+                       + criterion(pgd_adv_outputs, labels) * 0.575
+
+                loss.backward()
+                optimizer.step()
+                running_loss += loss.item()
+
+                cpu_pgd_adv_inputs = pgd_adv_inputs.detach().cpu()
+                custom_dataset.append((cpu_pgd_adv_inputs, labels.detach().cpu()))
+            print('Regular [%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / dataset_size), end=", ")
+            running_loss = 0.0
+
+            more_loader = torch.utils.data.DataLoader(custom_dataset, batch_size=100, shuffle=True, num_workers=10)
+
+            for i, (inputs, labels) in enumerate(more_loader, 0):
+                # get the inputs; data is a list of [inputs, labels]
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+                cpu_labels = labels.detach().cpu().tolist()
+                l, freqs = np.unique(cpu_labels, return_counts=True)
+                target_label = l[np.argmin(freqs)]
+
+                # zero the parameter gradients
+                nontarget_fgsm_adv_inputs, _ = self.nontarget_fgsm_perturb.attack(inputs, cpu_labels)
+                nontarget_fgsm_adv_inputs = torch.tensor(nontarget_fgsm_adv_inputs).to(device)
 
                 # tried setting target label to -1, broke cuda
                 pgd_adv_inputs, _ = self.pgd_perturb.attack(inputs, labels.detach().cpu().tolist(), target_label)
@@ -113,22 +140,18 @@ class Adv_Training():
                 optimizer.zero_grad()
                 outputs = self.model(inputs)
                 nontarget_fgsm_adv_outputs = self.model(nontarget_fgsm_adv_inputs)
-                # target_fgsm_adv_outputs = self.model(target_fgsm_adv_inputs)
                 pgd_adv_outputs = self.model(pgd_adv_inputs)
 
-                # custom_dataset.append((adv_outputs, labels))
-
-                loss = criterion(outputs, labels) + criterion(nontarget_fgsm_adv_outputs, labels) * 0.425 \
-                       + criterion(pgd_adv_outputs, labels) * 0.575
-                       # + criterion(target_fgsm_adv_outputs, labels) * 0.3 \
+                loss = criterion(nontarget_fgsm_adv_outputs, labels) * 0.05 \
+                       + criterion(pgd_adv_outputs, labels) * 0.05
 
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
-            print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / dataset_size))
+            print('Augmented [%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / dataset_size))
             running_loss = 0.0
+            custom_dataset.clear()
 
-        # more_loader = torch.utils.data.DataLoader(custom_dataset, batch_size=100, shuffle=True, num_workers=10)
         valloader = torch.utils.data.DataLoader(valset, batch_size=100, shuffle=True, num_workers=10)
         correct = 0
         total = 0
