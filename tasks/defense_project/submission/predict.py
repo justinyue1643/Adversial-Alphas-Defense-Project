@@ -7,10 +7,15 @@ Please do not change LeNet, the name of batch_predict and predict function of th
 import torch
 import numpy as np
 import torch.nn.functional as F
-
+import torchvision.transforms as T
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
+
+torch.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 class LeNet(nn.Module):
     def __init__(self):
@@ -56,13 +61,8 @@ class Prediction():
         return model
 
     def preprocess(self, original_images):
-        preprocess = transforms.Compose([
-            transforms.GaussianBlur(3),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-        transformed_img = preprocess(original_images)
-        perturbed_image = transformed_img.unsqueeze(0)
+        blurrer = T.GaussianBlur(kernel_size=3)
+        perturbed_image = blurrer(original_images)
         return perturbed_image
 
     def detect_attack(self, original_image):
@@ -80,6 +80,7 @@ class Prediction():
                 predictions.append(-1)
             else:
                 # print(image.shape)
+                image = self.preprocess(image)
                 outputs = self.model(image).to(self.device)
                 _, predicted = torch.max(outputs, 1)
 
@@ -89,6 +90,7 @@ class Prediction():
         # predictions = torch.squeeze(predictions, 1)
         # print(predictions.shape)
         return predictions
+
 
     def get_batch_input_gradient(self, original_images, labels, lossf=None):
         original_images.requires_grad = True
@@ -102,4 +104,3 @@ class Prediction():
         loss.backward()
         data_grad = original_images.grad.data
         return data_grad
-

@@ -1,4 +1,6 @@
 **/__pycache__/*
 .idea/*
-tasks/defense_project/datasets/*
-venv/*
+venv
+/tasks/defense_project/datasets
+/tasks/defense_project/results.json
+/tasks/defense_project/submission/*.pth

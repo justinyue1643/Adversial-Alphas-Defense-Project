@@ -163,7 +163,6 @@ class Adv_Training():
         total = 0
         with torch.no_grad():
             for inputs, labels in valloader:
-                # print(inputs.shape, labels.shape)
                 inputs = inputs.to(device)
                 labels = labels.to(device)
                 outputs = self.model(inputs)
