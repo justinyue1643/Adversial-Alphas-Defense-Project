@@ -109,6 +109,9 @@ class Adv_Training():
                 loss = criterion(outputs, labels) + criterion(nontarget_fgsm_adv_outputs, labels) * 0.425 \
                        + criterion(pgd_adv_outputs, labels) * 0.575
 
+                #loss = (torch.linalg.vector_norm(nontarget_fgsm_adv_outputs-outputs)**2) \
+                #        + (torch.linalg.vector_norm(pgd_adv_outputs-outputs)**2)
+
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
@@ -145,6 +148,9 @@ class Adv_Training():
                 loss = criterion(nontarget_fgsm_adv_outputs, labels) * 0.05 \
                        + criterion(pgd_adv_outputs, labels) * 0.05
 
+                #loss = (torch.linalg.vector_norm(nontarget_fgsm_adv_outputs-outputs)**2) \
+                #        + (torch.linalg.vector_norm(pgd_adv_outputs-outputs)**2)
+                
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()

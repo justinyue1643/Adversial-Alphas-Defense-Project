@@ -1,6 +1,6 @@
 {
-    "raw_acc": 67.70833333333333,
-    "score": 52.773029439696096,
-    "target_FGSM_targeted_sr": 1.5384615384615385,
-    "target_PGD_targeted_sr": 21.53846153846154
+    "raw_acc": 50.0,
+    "score": 30.0,
+    "target_FGSM_targeted_sr": 0.0,
+    "target_PGD_targeted_sr": 0.0
 }
