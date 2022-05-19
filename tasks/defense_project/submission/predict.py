@@ -7,6 +7,7 @@ Please do not change LeNet, the name of batch_predict and predict function of th
 import torch
 import numpy as np
 import torch.nn.functional as F
+import torchvision.transforms as T
 
 import torch.nn as nn
 import torch.optim as optim
@@ -56,6 +57,8 @@ class Prediction():
 
     def preprocess(self, original_images):
         perturbed_image = original_images.unsqueeze(0)
+        blurrer = T.GaussianBlur(kernel_size=4)
+        perturbed_image = blurrer(perturbed_image)
         return perturbed_image
 
     def get_batch_output(self, images):
