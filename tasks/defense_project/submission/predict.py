@@ -55,6 +55,8 @@ class Prediction():
 
     def preprocess(self, original_images):
         perturbed_image = original_images.unsqueeze(0)
+        blurrer = T.GaussianBlur(kernel_size=4)
+        perturbed_image = blurrer(perturbed_image)
         return perturbed_image
 
     def detect_attack(self, original_image):
