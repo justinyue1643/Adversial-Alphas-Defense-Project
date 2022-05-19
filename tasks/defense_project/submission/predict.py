@@ -7,8 +7,14 @@ Please do not change LeNet, the name of batch_predict and predict function of th
 import torch
 import numpy as np
 import torch.nn.functional as F
+import torchvision.transforms as T
 import torch.nn as nn
 import torch.optim as optim
+
+torch.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 class LeNet(nn.Module):
     def __init__(self):
@@ -54,7 +60,8 @@ class Prediction():
         return model
 
     def preprocess(self, original_images):
-        perturbed_image = original_images.unsqueeze(0)
+        blurrer = T.GaussianBlur(kernel_size=3)
+        perturbed_image = blurrer(original_images)
         return perturbed_image
 
     def detect_attack(self, original_image):
@@ -72,6 +79,7 @@ class Prediction():
                 predictions.append(-1)
             else:
                 # print(image.shape)
+                image = self.preprocess(image)
                 outputs = self.model(image).to(self.device)
                 _, predicted = torch.max(outputs, 1)
 
